@@ -1,1 +1,1 @@
-# SmartBin
+# Mindstack MERN Stack Application
