@@ -4,6 +4,12 @@ import { useEffect, useRef } from 'react';
 export default function RouteMap({ origin, destination, height = 280, onSummary }) {
   const mapRef = useRef(null);
   const containerRef = useRef(null);
+  const onSummaryRef = useRef(onSummary);
+
+  // keep latest callback without retriggering map init
+  useEffect(() => {
+    onSummaryRef.current = onSummary;
+  }, [onSummary]);
 
   useEffect(() => {
     let map;
@@ -42,18 +48,16 @@ export default function RouteMap({ origin, destination, height = 280, onSummary 
         draggableWaypoints: false,
         fitSelectedRoutes: true,
       }).addTo(map);
-      if (onSummary) {
-        control.on('routesfound', function(e) {
-          const route = e.routes?.[0];
-          const summary = route?.summary;
-          if (summary) {
-            onSummary({
-              distanceMeters: summary.totalDistance,
-              timeSeconds: summary.totalTime,
-            });
-          }
-        });
-      }
+      control.on('routesfound', function(e) {
+        const route = e.routes?.[0];
+        const summary = route?.summary;
+        if (summary && typeof onSummaryRef.current === 'function') {
+          onSummaryRef.current({
+            distanceMeters: summary.totalDistance,
+            timeSeconds: summary.totalTime,
+          });
+        }
+      });
       mapRef.current = map;
     }
 
@@ -68,7 +72,7 @@ export default function RouteMap({ origin, destination, height = 280, onSummary 
         // ignore cleanup errors
       }
     };
-  }, [origin, destination, onSummary]);
+  }, [origin.lat, origin.lng, destination.lat, destination.lng]);
 
   return (
     <div

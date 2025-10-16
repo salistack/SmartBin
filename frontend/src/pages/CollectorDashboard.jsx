@@ -109,20 +109,18 @@ export default function CollectorDashboard() {
                 </div>
                 {showRouteFor === (r._id || r.id) && (
                   (() => {
-                    const dest = getDestinationFromRequest(r);
+                    const destRaw = getDestinationFromRequest(r);
+                    const dest = destRaw ? { lat: destRaw.lat, lng: destRaw.lng } : null; // stable shape
                     if (dest) {
+                      const onSummary = ({ distanceMeters, timeSeconds }) => {
+                        setSummaryById((prev) => ({
+                          ...prev,
+                          [r._id || r.id]: { distanceMeters, timeSeconds },
+                        }));
+                      };
                       return (
                         <div className="mt-3">
-                          <RouteMap
-                            origin={origin}
-                            destination={dest}
-                            onSummary={({ distanceMeters, timeSeconds }) => {
-                              setSummaryById((prev) => ({
-                                ...prev,
-                                [r._id || r.id]: { distanceMeters, timeSeconds },
-                              }));
-                            }}
-                          />
+                          <RouteMap origin={origin} destination={dest} onSummary={onSummary} />
                           {summaryById[r._id || r.id] && (
                             <div className="mt-2 text-xs text-gray-700">
                               <span>
