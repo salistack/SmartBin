@@ -1,16 +1,16 @@
-// controllers/collectionController.js
-import Bin from "../models/Bin.js";
-import CollectionRequest from "../models/CollectionRequest.js";
+// controllers/collectionController.js (CommonJS)
+const Bin = require('../models/Bin');
+const CollectionRequest = require('../models/CollectionRequest');
 
 // Send collection request (auto or manual)
-export const sendCollectionRequest = async (req, res) => {
+exports.sendCollectionRequest = async (req, res) => {
   try {
     const { binId } = req.body;
-    const bin = await Bin.findById(binId).populate("user");
+    const bin = await Bin.findById(binId).populate('owner');
 
     if (!bin) return res.status(404).json({ message: "Bin not found" });
 
-    if (bin.filthLevel < bin.maxFilthLevel) {
+    if (bin.filthLevel < (bin.maxLevel ?? 100)) {
       return res.status(400).json({ message: "Bin is not full yet" });
     }
 
@@ -27,7 +27,7 @@ export const sendCollectionRequest = async (req, res) => {
     const collectionRequest = await CollectionRequest.create({
       bin: bin._id,
       binType: bin.type,
-      address: bin.user.address
+      address: bin.owner?.address,
     });
 
     res.status(201).json({
@@ -40,7 +40,7 @@ export const sendCollectionRequest = async (req, res) => {
 };
 
 // Collector updates request status to COLLECTED
-export const updateRequestStatus = async (req, res) => {
+exports.updateRequestStatus = async (req, res) => {
   try {
     const { requestId } = req.params;
     const { status } = req.body; // "COLLECTED" or "PENDING"
@@ -67,11 +67,10 @@ export const updateRequestStatus = async (req, res) => {
 };
 
 // List all pending requests (collector view)
-export const getPendingRequests = async (req, res) => {
+exports.getPendingRequests = async (req, res) => {
   try {
-    const requests = await CollectionRequest.find({ status: "PENDING" })
-      .populate("bin")
-      .populate("user");
+    const requests = await CollectionRequest.find({ status: 'PENDING' })
+      .populate('bin');
 
     res.json({ requests });
   } catch (error) {
@@ -80,11 +79,11 @@ export const getPendingRequests = async (req, res) => {
 };
 
 // List user's own requests
-export const getUserRequests = async (req, res) => {
+exports.getUserRequests = async (req, res) => {
   try {
-    const requests = await CollectionRequest.find({ "bin.user": req.user._id })
-      .populate("bin");
-
+    // Minimal fix: populate bin then filter by owner
+    const all = await CollectionRequest.find().populate('bin');
+    const requests = all.filter(r => r.bin && r.bin.owner?.toString() === req.user.id.toString());
     res.json({ requests });
   } catch (error) {
     res.status(500).json({ message: error.message });
