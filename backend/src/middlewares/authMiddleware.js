@@ -21,12 +21,12 @@ module.exports = async function authMiddleware(req, res, next) {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
-    const user = await User.findById(payload.id).select('_id name email');
+    const user = await User.findById(payload.id).select('_id name email role');
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    req.user = { id: user._id, name: user.name, email: user.email };
+    req.user = { id: user._id, name: user.name, email: user.email, role: user.role };
     next();
   } catch (err) {
     console.error('[AUTH MIDDLEWARE] error', err);

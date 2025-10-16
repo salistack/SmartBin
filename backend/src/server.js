@@ -13,9 +13,11 @@ app.use(express.json());
 const authRoutes = require('./routes/authRoutes');
 const binRoutes = require('./routes/binRoutes');
 const collectionRoutes = require('./routes/collectionRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/bins', binRoutes);
 app.use('/api/collections', collectionRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Simple health route
 app.get('/', (req, res) => {
