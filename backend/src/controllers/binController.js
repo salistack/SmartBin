@@ -42,3 +42,29 @@ exports.updateFilthLevel = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// List bins created by the current user with computed status
+exports.getMyBins = async (req, res) => {
+  try {
+    const bins = await Bin.find({ owner: req.user.id }).sort({ createdAt: -1 }).lean();
+    const result = bins.map(b => {
+      const max = b.maxLevel || 100;
+      const level = typeof b.filthLevel === 'number' ? b.filthLevel : 0;
+      const percent = Math.round((level / max) * 100);
+      const isFull = level >= max;
+      return {
+        id: String(b._id),
+        type: b.type,
+        filthLevel: level,
+        maxLevel: max,
+        percent,
+        isFull,
+        createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
+      };
+    });
+    res.json({ bins: result });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
