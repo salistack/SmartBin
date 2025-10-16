@@ -70,7 +70,7 @@ exports.updateRequestStatus = async (req, res) => {
 exports.getPendingRequests = async (req, res) => {
   try {
     const requests = await CollectionRequest.find({ status: 'PENDING' })
-      .populate('bin');
+      .populate({ path: 'bin', populate: { path: 'owner', select: 'name email address' } });
 
     res.json({ requests });
   } catch (error) {
@@ -81,8 +81,8 @@ exports.getPendingRequests = async (req, res) => {
 // List user's own requests
 exports.getUserRequests = async (req, res) => {
   try {
-    // Minimal fix: populate bin then filter by owner
-    const all = await CollectionRequest.find().populate('bin');
+    // populate bin and owner to access owner id
+    const all = await CollectionRequest.find().populate({ path: 'bin', populate: { path: 'owner', select: '_id' } });
     const requests = all.filter(r => r.bin && r.bin.owner?.toString() === req.user.id.toString());
     res.json({ requests });
   } catch (error) {
