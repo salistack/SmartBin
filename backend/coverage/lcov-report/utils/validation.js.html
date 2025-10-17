@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.79% </span>
+                <span class="strong">87.71% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>44/49</span>
+                <span class='fraction'>50/57</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.22% </span>
+                <span class="strong">88% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>52/57</span>
+                <span class='fraction'>66/75</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>7/7</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>32/32</span>
+                <span class='fraction'>37/37</span>
             </div>
         
             
@@ -127,7 +127,17 @@
 <a name='L62'></a><a href='#L62'>62</a>
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
-<a name='L65'></a><a href='#L65'>65</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">41x</span>
 <span class="cline-any cline-yes">39x</span>
@@ -140,12 +150,16 @@
 <span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-yes">31x</span>
+<span class="cline-any cline-yes">31x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">31x</span>
 <span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">30x</span>
 <span class="cline-any cline-yes">30x</span>
 <span class="cline-any cline-yes">57x</span>
+<span class="cline-any cline-yes">57x</span>
+<span class="cline-any cline-yes">28x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">28x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -169,10 +183,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">41x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -203,13 +223,17 @@ const validateEmail = (email) =&gt; {
 &nbsp;
   const [localPart, domainPart] = parts;
   if (localPart.length === 0 || localPart.length &gt; 128) return false;
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (localPart.startsWith('.') || localPart.endsWith('.')) <span class="cstat-no" title="statement not covered" >return false;</span>
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!/^[A-Za-z0-9!#$%&amp;'*+/=?^_`{|}~.-]+$/.test(localPart)) <span class="cstat-no" title="statement not covered" >return false;</span>
 &nbsp;
   if (domainPart.length === 0 || domainPart.length &gt; 190) return false;
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!/^[A-Za-z0-9.-]+$/.test(domainPart)) <span class="cstat-no" title="statement not covered" >return false;</span>
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (domainPart.startsWith('-') || domainPart.endsWith('-')) <span class="cstat-no" title="statement not covered" >return false;</span>
-  if (!domainPart.includes('.')) return false;
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (domainPart.split('.').some((label) =&gt; label.length === 0)) <span class="cstat-no" title="statement not covered" >return false;</span>
+&nbsp;
+  const labels = domainPart.split('.');
+  if (labels.length &lt; 2) return false;
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (labels.some((label) =&gt; label.length === 0 || label.length &gt; 63)) <span class="cstat-no" title="statement not covered" >return false;</span>
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (labels.some((label) =&gt; label.startsWith('-') || label.endsWith('-'))) <span class="cstat-no" title="statement not covered" >return false;</span>
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (labels[labels.length - 1].length &lt; 2) <span class="cstat-no" title="statement not covered" >return false;</span>
 &nbsp;
   return true;
 };
@@ -233,17 +257,23 @@ const validateCoordinates = (lat, lng) =&gt; {
 &nbsp;
 const sanitizeString = (str, maxLength = 255) =&gt; {
   if (typeof str !== 'string') return '';
-  return str.trim().substring(0, maxLength);
+&nbsp;
+  const normalizedMax = Number.isInteger(maxLength) &amp;&amp; maxLength &gt; 0 ? maxLength : <span class="branch-1 cbranch-no" title="branch not covered" >255;</span>
+  return str.trim().slice(0, normalizedMax);
 };
 &nbsp;
 const validatePositiveNumber = (num, max = Number.MAX_SAFE_INTEGER) =&gt; {
-  return typeof num === 'number' &amp;&amp; Number.isFinite(num) &amp;&amp; num &gt;= 0 &amp;&amp; num &lt;= max;
+  const upperBound = typeof max === 'number' &amp;&amp; Number.isFinite(max)
+    ? max
+    : <span class="branch-1 cbranch-no" title="branch not covered" >Number.MAX_SAFE_INTEGER;</span>
+&nbsp;
+  return typeof num === 'number' &amp;&amp; Number.isFinite(num) &amp;&amp; num &gt;= 0 &amp;&amp; num &lt;= upperBound;
 };
 &nbsp;
 // Standard error response format
 const createErrorResponse = (message, details = null) =&gt; {
   const response = { message };
-  if (details) response.details = details;
+  if (details !== undefined &amp;&amp; details !== null) response.details = details;
   return response;
 };
 &nbsp;
@@ -262,7 +292,7 @@ module.exports = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-17T17:47:57.254Z
+                at 2025-10-17T17:56:20.888Z
             </div>
         <script src="../prettify.js"></script>
         <script>

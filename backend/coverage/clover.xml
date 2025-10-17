@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1760723277294" clover="3.2.0">
-  <project timestamp="1760723277294" name="All files">
-    <metrics statements="598" coveredstatements="518" conditionals="415" coveredconditionals="345" methods="75" coveredmethods="74" elements="1088" coveredelements="937" complexity="0" loc="598" ncloc="598" packages="8" files="21" classes="21"/>
+<coverage generated="1760723780933" clover="3.2.0">
+  <project timestamp="1760723780933" name="All files">
+    <metrics statements="603" coveredstatements="523" conditionals="433" coveredconditionals="359" methods="76" coveredmethods="75" elements="1112" coveredelements="957" complexity="0" loc="603" ncloc="603" packages="8" files="21" classes="21"/>
     <package name="config">
       <metrics statements="10" coveredstatements="10" conditionals="20" coveredconditionals="17" methods="1" coveredmethods="1"/>
       <file name="index.js" path="C:\Users\Umair_Salah\Documents\GitHub\SmartBin\backend\src\config\index.js">
@@ -650,9 +650,9 @@
       </file>
     </package>
     <package name="utils">
-      <metrics statements="32" coveredstatements="32" conditionals="57" coveredconditionals="52" methods="7" coveredmethods="7"/>
+      <metrics statements="37" coveredstatements="37" conditionals="75" coveredconditionals="66" methods="8" coveredmethods="8"/>
       <file name="validation.js" path="C:\Users\Umair_Salah\Documents\GitHub\SmartBin\backend\src\utils\validation.js">
-        <metrics statements="32" coveredstatements="32" conditionals="57" coveredconditionals="52" methods="7" coveredmethods="7"/>
+        <metrics statements="37" coveredstatements="37" conditionals="75" coveredconditionals="66" methods="8" coveredmethods="8"/>
         <line num="2" count="9" type="stmt"/>
         <line num="3" count="41" type="cond" truecount="2" falsecount="0"/>
         <line num="4" count="39" type="cond" truecount="4" falsecount="0"/>
@@ -662,29 +662,34 @@
         <line num="9" count="36" type="cond" truecount="2" falsecount="0"/>
         <line num="11" count="32" type="stmt"/>
         <line num="12" count="32" type="cond" truecount="4" falsecount="0"/>
-        <line num="13" count="31" type="cond" truecount="1" falsecount="1"/>
-        <line num="15" count="31" type="cond" truecount="4" falsecount="0"/>
-        <line num="16" count="30" type="cond" truecount="1" falsecount="1"/>
-        <line num="17" count="30" type="cond" truecount="3" falsecount="1"/>
-        <line num="18" count="30" type="cond" truecount="2" falsecount="0"/>
-        <line num="19" count="57" type="cond" truecount="1" falsecount="1"/>
-        <line num="21" count="28" type="stmt"/>
-        <line num="24" count="9" type="stmt"/>
-        <line num="25" count="29" type="cond" truecount="2" falsecount="0"/>
-        <line num="26" count="27" type="cond" truecount="2" falsecount="0"/>
-        <line num="27" count="23" type="cond" truecount="2" falsecount="0"/>
-        <line num="30" count="9" type="stmt"/>
-        <line num="31" count="22" type="stmt"/>
-        <line num="41" count="9" type="cond" truecount="1" falsecount="0"/>
-        <line num="42" count="41" type="cond" truecount="2" falsecount="0"/>
-        <line num="43" count="35" type="stmt"/>
-        <line num="46" count="9" type="cond" truecount="1" falsecount="0"/>
-        <line num="47" count="18" type="cond" truecount="4" falsecount="0"/>
-        <line num="51" count="9" type="cond" truecount="1" falsecount="0"/>
-        <line num="52" count="53" type="stmt"/>
-        <line num="53" count="53" type="cond" truecount="2" falsecount="0"/>
-        <line num="54" count="53" type="stmt"/>
-        <line num="57" count="9" type="stmt"/>
+        <line num="13" count="31" type="cond" truecount="3" falsecount="1"/>
+        <line num="14" count="31" type="cond" truecount="1" falsecount="1"/>
+        <line num="16" count="31" type="cond" truecount="4" falsecount="0"/>
+        <line num="17" count="30" type="cond" truecount="1" falsecount="1"/>
+        <line num="19" count="30" type="stmt"/>
+        <line num="20" count="30" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="57" type="cond" truecount="3" falsecount="1"/>
+        <line num="22" count="57" type="cond" truecount="3" falsecount="1"/>
+        <line num="23" count="28" type="cond" truecount="1" falsecount="1"/>
+        <line num="25" count="28" type="stmt"/>
+        <line num="28" count="9" type="stmt"/>
+        <line num="29" count="29" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="34" count="9" type="stmt"/>
+        <line num="35" count="22" type="stmt"/>
+        <line num="45" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="46" count="41" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="35" type="cond" truecount="3" falsecount="1"/>
+        <line num="49" count="35" type="stmt"/>
+        <line num="52" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="53" count="18" type="cond" truecount="3" falsecount="1"/>
+        <line num="57" count="18" type="cond" truecount="4" falsecount="0"/>
+        <line num="61" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="62" count="53" type="stmt"/>
+        <line num="63" count="53" type="cond" truecount="4" falsecount="0"/>
+        <line num="64" count="53" type="stmt"/>
+        <line num="67" count="9" type="stmt"/>
       </file>
     </package>
   </project>

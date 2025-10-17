@@ -10,13 +10,17 @@ const validateEmail = (email) => {
 
   const [localPart, domainPart] = parts;
   if (localPart.length === 0 || localPart.length > 128) return false;
+  if (localPart.startsWith('.') || localPart.endsWith('.')) return false;
   if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(localPart)) return false;
 
   if (domainPart.length === 0 || domainPart.length > 190) return false;
   if (!/^[A-Za-z0-9.-]+$/.test(domainPart)) return false;
-  if (domainPart.startsWith('-') || domainPart.endsWith('-')) return false;
-  if (!domainPart.includes('.')) return false;
-  if (domainPart.split('.').some((label) => label.length === 0)) return false;
+
+  const labels = domainPart.split('.');
+  if (labels.length < 2) return false;
+  if (labels.some((label) => label.length === 0 || label.length > 63)) return false;
+  if (labels.some((label) => label.startsWith('-') || label.endsWith('-'))) return false;
+  if (labels[labels.length - 1].length < 2) return false;
 
   return true;
 };
@@ -40,17 +44,23 @@ const validateCoordinates = (lat, lng) => {
 
 const sanitizeString = (str, maxLength = 255) => {
   if (typeof str !== 'string') return '';
-  return str.trim().substring(0, maxLength);
+
+  const normalizedMax = Number.isInteger(maxLength) && maxLength > 0 ? maxLength : 255;
+  return str.trim().slice(0, normalizedMax);
 };
 
 const validatePositiveNumber = (num, max = Number.MAX_SAFE_INTEGER) => {
-  return typeof num === 'number' && Number.isFinite(num) && num >= 0 && num <= max;
+  const upperBound = typeof max === 'number' && Number.isFinite(max)
+    ? max
+    : Number.MAX_SAFE_INTEGER;
+
+  return typeof num === 'number' && Number.isFinite(num) && num >= 0 && num <= upperBound;
 };
 
 // Standard error response format
 const createErrorResponse = (message, details = null) => {
   const response = { message };
-  if (details) response.details = details;
+  if (details !== undefined && details !== null) response.details = details;
   return response;
 };
 
