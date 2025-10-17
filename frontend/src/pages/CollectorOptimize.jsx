@@ -1,7 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, clearAuth, getAuth } from '../api/client';
-import RouteMap from '../components/RouteMap';
 import RequestsMap from '../components/RequestsMap';
 import OptimizedRouteMap from '../components/OptimizedRouteMap';
 
@@ -20,8 +19,6 @@ export default function CollectorOptimize() {
   const [loopBack, setLoopBack] = useState(false);
   const [allSummary, setAllSummary] = useState(null);
   const [orderedStops, setOrderedStops] = useState([]);
-  const [summaryById, setSummaryById] = useState({});
-  const [showRouteFor, setShowRouteFor] = useState(null);
 
   const mapPoints = useMemo(() => {
     return pending.map((r) => {
@@ -38,48 +35,7 @@ export default function CollectorOptimize() {
     }).filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng));
   }, [pending]);
 
-  function getDestinationFromRequest(request) {
-    let lat = request?.bin?.owner?.address?.lat ?? request?.address?.lat;
-    let lng = request?.bin?.owner?.address?.lng ?? request?.address?.lng;
-    if (typeof lat === 'string') lat = parseFloat(lat);
-    if (typeof lng === 'string') lng = parseFloat(lng);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      return { lat, lng };
-    }
-    return null;
-  }
 
-  function renderRouteDetails(request, id) {
-    const destination = getDestinationFromRequest(request);
-    if (!destination) {
-      return (
-        <div className="text-xs text-gray-600">
-          No coordinates available for this request. The resident did not provide latitude/longitude.
-        </div>
-      );
-    }
-    const onSummary = ({ distanceMeters, timeSeconds }) => {
-      setSummaryById((prev) => ({
-        ...prev,
-        [id]: { distanceMeters, timeSeconds },
-      }));
-    };
-    return (
-      <div className="mt-3">
-        <RouteMap origin={origin} destination={destination} onSummary={onSummary} />
-        {summaryById[id] && (
-          <div className="mt-2 text-xs text-gray-700">
-            <span>
-              Distance: {Math.round(summaryById[id].distanceMeters / 100) / 10} km
-            </span>
-            <span className="ml-3">
-              ETA: {Math.round(summaryById[id].timeSeconds / 60)} min
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   const loadPending = useCallback(async () => {
     setError('');
@@ -111,21 +67,6 @@ export default function CollectorOptimize() {
     );
   }, []);
 
-  const markCollected = useCallback(async (id) => {
-    try {
-      await api.patch(`/api/collections/${id}/status`, { status: 'COLLECTED' }, authHeader);
-      setShowRouteFor((prev) => (prev === id ? null : prev));
-      setSummaryById((prev) => {
-        if (!prev[id]) return prev;
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      await loadPending();
-    } catch (err) {
-      alert(err.message || 'Failed to update status');
-    }
-  }, [authHeader, loadPending]);
 
   const handleLogout = useCallback(() => {
     clearAuth();
@@ -243,6 +184,14 @@ export default function CollectorOptimize() {
             )}
           </div>
 
+          {loading && (
+            <div className="text-sm text-gray-600">Loading pending requests…</div>
+          )}
+          {!loading && error && (
+            <div className="text-sm text-red-600">{error}</div>
+          )}
+
+          {/*
           {loading ? (
             <div className="text-sm text-gray-600">Loading pending requests…</div>
           ) : error ? (
@@ -309,6 +258,7 @@ export default function CollectorOptimize() {
               </table>
             </div>
           )}
+          */}
         </div>
       </div>
     </div>
