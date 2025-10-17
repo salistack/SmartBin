@@ -303,7 +303,7 @@ exports.optimizeRoute = async (req, res) => {
       return res.json(buildSampleRoute(area, schedule, truck, ['Bin query failed; using simulation data.']));
     }
 
-    const totalConsidered = bins.length;
+  const totalConsidered = bins.length;
     const candidateBins = bins.filter((bin) => {
       const fill = typeof bin.fillLevel === 'number' ? bin.fillLevel : null;
       const status = (bin.status || '').toLowerCase();
@@ -317,7 +317,7 @@ exports.optimizeRoute = async (req, res) => {
         summary: {
           area,
           window: schedule,
-          totalBinsConsidered,
+          totalBinsConsidered: totalConsidered,
           selectedBins: 0,
           assignedTruck: truck.id || null,
         },
@@ -359,7 +359,7 @@ exports.optimizeRoute = async (req, res) => {
       summary: {
         area,
         window: schedule,
-        totalBinsConsidered,
+  totalBinsConsidered: totalConsidered,
         selectedBins: route.length,
         assignedTruck,
       },
