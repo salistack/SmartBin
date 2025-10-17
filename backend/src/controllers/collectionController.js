@@ -78,12 +78,27 @@ exports.getPendingRequests = async (req, res) => {
   }
 };
 
-// List user's own requests
+// List collected requests for history (collector view)
+exports.getCollectedRequests = async (req, res) => {
+  try {
+    const requests = await CollectionRequest.find({ status: 'COLLECTED' })
+      .sort({ updatedAt: -1 })
+      .populate({ path: 'bin', populate: { path: 'owner', select: 'name email address' } });
+
+    res.json({ requests });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// List user's own requests (resident/owner)
 exports.getUserRequests = async (req, res) => {
   try {
-    // populate bin and owner to access owner id
-    const all = await CollectionRequest.find().populate({ path: 'bin', populate: { path: 'owner', select: '_id' } });
-    const requests = all.filter(r => r.bin && r.bin.owner?.toString() === req.user.id.toString());
+    // Find bins owned by current user, then fetch requests for those bins
+    const bins = await Bin.find({ owner: req.user.id }).select('_id');
+    const binIds = bins.map((b) => b._id);
+    const requests = await CollectionRequest.find({ bin: { $in: binIds } })
+      .sort({ createdAt: -1 });
     res.json({ requests });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { api, getAuth } from '../api/client';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api, clearAuth, getAuth } from '../api/client';
 import RouteMap from '../components/RouteMap';
+import RequestsMap from '../components/RequestsMap';
+import OptimizedRouteMap from '../components/OptimizedRouteMap';
 
 // Collector dashboard wires to backend collector flows:
 // - List Pending Requests: GET /api/collections/pending
@@ -8,14 +11,37 @@ import RouteMap from '../components/RouteMap';
 export default function CollectorDashboard() {
   const { token } = getAuth();
   const authHeader = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
+  const navigate = useNavigate();
 
   const [pending, setPending] = useState([]);
+  const [collected, setCollected] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showRouteFor, setShowRouteFor] = useState(null); // request id
+  const [historyError, setHistoryError] = useState('');
+  const [expandedRouteId, setExpandedRouteId] = useState(null);
   // For simplicity, default origin is Colombo; user can override with GPS
   const [origin, setOrigin] = useState({ lat: 6.9271, lng: 79.8612 });
   const [summaryById, setSummaryById] = useState({});
+  const [focusId, setFocusId] = useState(null);
+  const [showAllOptimized, setShowAllOptimized] = useState(false);
+  const [allSummary, setAllSummary] = useState(null);
+  const [loopBack, setLoopBack] = useState(false);
+  const [orderedStops, setOrderedStops] = useState([]);
+  const mapPoints = useMemo(() => {
+    return pending.map((r) => {
+      let lat = r?.bin?.owner?.address?.lat ?? r?.address?.lat;
+      let lng = r?.bin?.owner?.address?.lng ?? r?.address?.lng;
+      if (typeof lat === 'string') lat = parseFloat(lat);
+      if (typeof lng === 'string') lng = parseFloat(lng);
+      return {
+        id: r._id || r.id,
+        lat,
+        lng,
+        title: `${r.binType || 'Request'} ${r.address?.city ? '• ' + r.address.city : ''}`,
+      };
+    }).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  }, [pending]);
 
   function getDestinationFromRequest(r) {
     let lat = r?.bin?.owner?.address?.lat ?? r?.address?.lat;
@@ -28,8 +54,41 @@ export default function CollectorDashboard() {
     return null;
   }
 
+  function renderRouteDetails(request, id) {
+    const destination = getDestinationFromRequest(request);
+    if (!destination) {
+      return (
+        <div className="text-xs text-gray-600">
+          No coordinates available for this request. The resident did not provide latitude/longitude.
+        </div>
+      );
+    }
+    const onSummary = ({ distanceMeters, timeSeconds }) => {
+      setSummaryById((prev) => ({
+        ...prev,
+        [id]: { distanceMeters, timeSeconds },
+      }));
+    };
+    return (
+      <div>
+        <RouteMap origin={origin} destination={destination} onSummary={onSummary} />
+        {summaryById[id] && (
+          <div className="mt-2 text-xs text-gray-700">
+            <span>
+              Distance: {Math.round(summaryById[id].distanceMeters / 100) / 10} km
+            </span>
+            <span className="ml-3">
+              ETA: {Math.round(summaryById[id].timeSeconds / 60)} min
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const loadPending = useCallback(async () => {
     setError('');
+    setLoading(true);
     try {
       const data = await api.get('/api/collections/pending', authHeader);
       setPending(data?.requests || []);
@@ -40,112 +99,351 @@ export default function CollectorDashboard() {
     }
   }, [authHeader]);
 
+  const loadCollected = useCallback(async () => {
+    setHistoryError('');
+    setHistoryLoading(true);
+    try {
+      const data = await api.get('/api/collections/collected', authHeader);
+      setCollected(data?.requests || []);
+    } catch (err) {
+      setHistoryError(err.message || 'Failed to load collected requests');
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [authHeader]);
+
   useEffect(() => { loadPending(); }, [loadPending]);
+
+  // Auto-detect collector's current location on mount
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setOrigin({ lat: latitude, lng: longitude });
+      },
+      () => { /* ignore denied */ },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }, []);
 
   async function markCollected(id) {
     try {
       await api.patch(`/api/collections/${id}/status`, { status: 'COLLECTED' }, authHeader);
+      setExpandedRouteId(null);
+      setSummaryById((prev) => {
+        if (!prev[id]) return prev;
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       await loadPending();
+      if (active === 'collected') {
+        await loadCollected();
+      }
     } catch (err) {
       alert(err.message || 'Failed to update status');
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow p-5">
-        <h1 className="text-xl font-bold text-emerald-800">Collector Panel</h1>
-        <p className="text-sm text-gray-600">Pending collection requests</p>
-      </div>
+  const [active, setActive] = useState('pending'); // 'pending' | 'collected'
 
-      <div className="bg-white rounded-xl shadow p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold">Pending Requests</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (!navigator.geolocation) {
-                  alert('Geolocation is not supported by your browser');
-                  return;
-                }
-                navigator.geolocation.getCurrentPosition(
-                  (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    setOrigin({ lat: latitude, lng: longitude });
-                  },
-                  () => alert('Unable to retrieve your location')
-                );
-              }}
-              className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50"
-            >
-              Use My Location
-            </button>
-            <button onClick={loadPending} className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50">Refresh</button>
+  const handleLogout = useCallback(() => {
+    clearAuth();
+    navigate('/login', { replace: true });
+  }, [navigate]);
+
+  return (
+    <div className="flex min-h-[80vh]">
+      <aside className="w-56 border-r bg-gray-50 p-4">
+        <div className="text-emerald-700 font-bold mb-3">Collector</div>
+        <nav className="space-y-1">
+          <button
+            onClick={() => {
+              if (active !== 'pending') setActive('pending');
+              setExpandedRouteId(null);
+              setFocusId(null);
+              setShowAllOptimized(false);
+              setAllSummary(null);
+              setOrderedStops([]);
+              setSummaryById({});
+              loadPending();
+            }}
+            className={`w-full text-left px-3 py-2 rounded-md ${active==='pending' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}
+          >
+            Pending Requests
+          </button>
+          <button
+            onClick={() => {
+              if (active !== 'collected') setActive('collected');
+              setExpandedRouteId(null);
+              setFocusId(null);
+              setShowAllOptimized(false);
+              setAllSummary(null);
+              setOrderedStops([]);
+              setSummaryById({});
+              loadCollected();
+            }}
+            className={`w-full text-left px-3 py-2 rounded-md ${active==='collected' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}
+          >
+            Collected History
+          </button>
+        </nav>
+      </aside>
+
+      <div className="flex-1 space-y-6 p-5">
+        <div className="bg-white rounded-xl shadow p-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-emerald-800">Collector Panel</h1>
+            <p className="text-sm text-gray-600">Track pending pickups and review completed collections</p>
           </div>
+          <button
+            onClick={handleLogout}
+            className="mt-3 sm:mt-0 inline-flex items-center justify-center border border-red-500 text-red-600 px-4 py-2 text-sm font-medium rounded-md hover:bg-red-50"
+          >
+            Log Out
+          </button>
         </div>
-        {loading ? (
-          <div className="text-sm text-gray-600">Loading…</div>
-        ) : error ? (
-          <div className="text-sm text-red-600">{error}</div>
-        ) : pending.length === 0 ? (
-          <div className="text-sm text-gray-600">No pending requests</div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pending.map((r) => (
-              <div key={r._id || r.id} className="border rounded-lg p-4">
-                <div className="text-sm text-gray-500">Bin Type</div>
-                <div className="font-semibold">{r.binType}</div>
-                <div className="mt-2 text-sm text-gray-500">Address</div>
-                <div className="text-sm">{r.address?.street || '—'}, {r.address?.city || ''}</div>
-                <div className="mt-3 flex gap-2 items-center">
-                  <span className="text-xs rounded-full bg-yellow-100 text-yellow-700 px-2 py-0.5">{r.status}</span>
-                  <button
-                    onClick={() => setShowRouteFor(showRouteFor === (r._id || r.id) ? null : (r._id || r.id))}
-                    className="ml-auto text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
-                  >
-                    {showRouteFor === (r._id || r.id) ? 'Hide Route' : 'Show Route'}
-                  </button>
-                  <button onClick={() => markCollected(r._id || r.id)} className="text-xs bg-emerald-600 text-white px-3 py-1 rounded-md hover:bg-emerald-700">Mark Collected</button>
+
+        <div className="bg-white rounded-xl shadow p-5 space-y-5">
+          {active === 'pending' && (
+            <>
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="font-semibold">Pending Requests</h2>
+                  <p className="text-xs text-gray-500">Plan your route and mark bins once collected.</p>
                 </div>
-                {showRouteFor === (r._id || r.id) && (
-                  (() => {
-                    const destRaw = getDestinationFromRequest(r);
-                    const dest = destRaw ? { lat: destRaw.lat, lng: destRaw.lng } : null; // stable shape
-                    if (dest) {
-                      const onSummary = ({ distanceMeters, timeSeconds }) => {
-                        setSummaryById((prev) => ({
-                          ...prev,
-                          [r._id || r.id]: { distanceMeters, timeSeconds },
-                        }));
-                      };
-                      return (
-                        <div className="mt-3">
-                          <RouteMap origin={origin} destination={dest} onSummary={onSummary} />
-                          {summaryById[r._id || r.id] && (
-                            <div className="mt-2 text-xs text-gray-700">
-                              <span>
-                                Distance: {Math.round(summaryById[r._id || r.id].distanceMeters / 100) / 10} km
-                              </span>
-                              <span className="ml-3">
-                                ETA: {Math.round(summaryById[r._id || r.id].timeSeconds / 60)} min
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (!navigator.geolocation) {
+                        alert('Geolocation is not supported by your browser');
+                        return;
+                      }
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          const { latitude, longitude } = pos.coords;
+                          setOrigin({ lat: latitude, lng: longitude });
+                          setFocusId('collector');
+                        },
+                        () => alert('Unable to retrieve your location')
                       );
-                    }
-                    return (
-                      <div className="mt-3 text-xs text-gray-600">
-                        No coordinates available for this request. The resident did not provide latitude/longitude.
-                      </div>
-                    );
-                  })()
+                    }}
+                    className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50"
+                  >
+                    Use My Location
+                  </button>
+                  {!showAllOptimized && (
+                    <button
+                      onClick={() => setFocusId('collector')}
+                      className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50"
+                    >
+                      Center on Me
+                    </button>
+                  )}
+                  <button onClick={loadPending} className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50">Refresh</button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={showAllOptimized} onChange={(e) => setShowAllOptimized(e.target.checked)} />
+                    Show shortest route through all
+                  </label>
+                  {showAllOptimized && (
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={loopBack} onChange={(e) => setLoopBack(e.target.checked)} />
+                      Return to origin
+                    </label>
+                  )}
+                  {showAllOptimized && allSummary && (
+                    <div className="text-xs text-gray-700">
+                      Distance: {Math.round(allSummary.distanceMeters / 100) / 10} km
+                      <span className="ml-3">ETA: {Math.round(allSummary.timeSeconds / 60)} min</span>
+                      <span className="ml-3">Stops: {allSummary.stops}</span>
+                    </div>
+                  )}
+                  {showAllOptimized && orderedStops.length > 0 && (
+                    <a
+                      className="text-xs text-emerald-700 underline ml-auto"
+                      href={buildGoogleMapsUrl(origin, orderedStops, loopBack)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open in Google Maps
+                    </a>
+                  )}
+                </div>
+                {showAllOptimized ? (
+                  <OptimizedRouteMap
+                    origin={origin}
+                    requests={mapPoints}
+                    onSummary={(s) => setAllSummary(s)}
+                    returnToOrigin={loopBack}
+                    onOrder={(stops) => setOrderedStops(stops)}
+                  />
+                ) : (
+                  <RequestsMap origin={origin} points={mapPoints} focusId={focusId} />
                 )}
               </div>
-            ))}
-          </div>
-        )}
+
+              {loading ? (
+                <div className="text-sm text-gray-600">Loading…</div>
+              ) : error ? (
+                <div className="text-sm text-red-600">{error}</div>
+              ) : pending.length === 0 ? (
+                <div className="text-sm text-gray-600">No pending requests</div>
+              ) : (
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3">Bin Type</th>
+                        <th className="px-4 py-3">Address</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pending.map((r) => {
+                        const id = r._id || r.id;
+                        const addressLine = [r.address?.street, r.address?.city].filter(Boolean).join(', ') || '—';
+                        return (
+                          <Fragment key={id}>
+                            <tr className="align-top">
+                              <td className="px-4 py-3 font-medium text-gray-800">{r.binType || '—'}</td>
+                              <td className="px-4 py-3 text-gray-700">{addressLine}</td>
+                              <td className="px-4 py-3">
+                                <span className="text-xs rounded-full bg-yellow-100 text-yellow-700 px-2 py-1">{r.status}</span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => setFocusId(id)}
+                                    className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
+                                  >
+                                    Center on Map
+                                  </button>
+                                  <button
+                                    onClick={() => setExpandedRouteId(expandedRouteId === id ? null : id)}
+                                    className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
+                                  >
+                                    {expandedRouteId === id ? 'Hide Route' : 'Show Route'}
+                                  </button>
+                                  <button
+                                    onClick={() => markCollected(id)}
+                                    className="text-xs bg-emerald-600 text-white px-3 py-1 rounded-md hover:bg-emerald-700"
+                                  >
+                                    Mark Collected
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {expandedRouteId === id && (
+                              <tr className="bg-gray-50">
+                                <td colSpan={4} className="px-4 py-3">
+                                  {renderRouteDetails(r, id)}
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+
+          {active === 'collected' && (
+            <>
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="font-semibold">Collected History</h2>
+                  <p className="text-xs text-gray-500">Recently completed pickups.</p>
+                </div>
+                <button onClick={loadCollected} className="self-start text-sm border px-3 py-1 rounded-md hover:bg-gray-50">Refresh</button>
+              </div>
+
+              {historyLoading ? (
+                <div className="text-sm text-gray-600">Loading…</div>
+              ) : historyError ? (
+                <div className="text-sm text-red-600">{historyError}</div>
+              ) : collected.length === 0 ? (
+                <div className="text-sm text-gray-600">No collected requests yet.</div>
+              ) : (
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                      <tr>
+                        <th className="px-4 py-3">Bin Type</th>
+                        <th className="px-4 py-3">Address</th>
+                        <th className="px-4 py-3">Collected On</th>
+                        <th className="px-4 py-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {collected.map((r) => {
+                        const id = r._id || r.id;
+                        const addressLine = [r.address?.street, r.address?.city].filter(Boolean).join(', ') || '—';
+                        return (
+                          <Fragment key={id}>
+                            <tr className="align-top">
+                              <td className="px-4 py-3 font-medium text-gray-800">{r.binType || '—'}</td>
+                              <td className="px-4 py-3 text-gray-700">{addressLine}</td>
+                              <td className="px-4 py-3 text-gray-600">{r.updatedAt ? new Date(r.updatedAt).toLocaleString() : '—'}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => setFocusId(id)}
+                                    className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
+                                  >
+                                    Center on Map
+                                  </button>
+                                  <button
+                                    onClick={() => setExpandedRouteId(expandedRouteId === id ? null : id)}
+                                    className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
+                                  >
+                                    {expandedRouteId === id ? 'Hide Route' : 'Show Route'}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {expandedRouteId === id && (
+                              <tr className="bg-gray-50">
+                                <td colSpan={4} className="px-4 py-3">
+                                  {renderRouteDetails(r, id)}
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+// Build a Google Maps directions URL with multiple waypoints
+function buildGoogleMapsUrl(origin, stops, loopBack) {
+  const enc = encodeURIComponent;
+  // Prefer explicit GPS coordinates as origin; fallback to 'Current Location' if missing
+  const hasOrigin = origin && Number.isFinite(origin.lat) && Number.isFinite(origin.lng);
+  const o = hasOrigin ? `${origin.lat},${origin.lng}` : 'Current Location';
+  const destination = loopBack && stops.length > 0 ? o : `${stops[stops.length - 1].lat},${stops[stops.length - 1].lng}`;
+  const waypoints = stops.slice(0, loopBack ? stops.length : Math.max(0, stops.length - 1))
+    .map((s) => `${s.lat},${s.lng}`).join('|');
+  const base = 'https://www.google.com/maps/dir/?api=1';
+  const params = [`origin=${enc(o)}`, `destination=${enc(destination)}`];
+  if (waypoints) params.push(`waypoints=${enc(waypoints)}`);
+  return `${base}&${params.join('&')}`;
 }

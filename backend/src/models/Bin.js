@@ -1,4 +1,4 @@
-// models/Bin.js (CommonJS)
+
 const mongoose = require('mongoose');
 
 const binSchema = new mongoose.Schema({
