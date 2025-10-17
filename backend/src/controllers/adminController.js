@@ -15,7 +15,7 @@ try {
   Collection = null;
 }
 
-exports.getDashboard = async (req, res) => {
+exports.getDashboard = async(req, res) => {
   try {
     const windowDays = 7;
     const now = new Date();
@@ -33,12 +33,12 @@ exports.getDashboard = async (req, res) => {
           $group: {
             _id: {
               day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-              role: '$role',
+              role: '$role'
             },
-            count: { $sum: 1 },
-          },
-        },
-      ]),
+            count: { $sum: 1 }
+          }
+        }
+      ])
     ]);
 
     const roleOrder = ['resident', 'collector', 'admin'];
@@ -51,7 +51,7 @@ exports.getDashboard = async (req, res) => {
 
     const [binTotals, collectionTotals] = await Promise.all([
       Bin ? Bin.countDocuments() : Promise.resolve(null),
-      Collection ? Collection.countDocuments() : Promise.resolve(null),
+      Collection ? Collection.countDocuments() : Promise.resolve(null)
     ]);
 
     const dayKeys = [];
@@ -60,8 +60,8 @@ exports.getDashboard = async (req, res) => {
       series: {
         resident: new Array(windowDays).fill(0),
         collector: new Array(windowDays).fill(0),
-        admin: new Array(windowDays).fill(0),
-      },
+        admin: new Array(windowDays).fill(0)
+      }
     };
 
     for (let i = 0; i < windowDays; i += 1) {
@@ -84,12 +84,12 @@ exports.getDashboard = async (req, res) => {
       try {
         const collectionAgg = await Collection.aggregate([
           { $group: { _id: '$status', count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
+          { $sort: { count: -1 } }
         ]);
         if (collectionAgg.length) {
           collectionStatuses = {
             labels: collectionAgg.map(({ _id }) => (_id || 'Unknown').toString()),
-            series: collectionAgg.map(({ count }) => count),
+            series: collectionAgg.map(({ count }) => count)
           };
         }
       } catch (err) {
@@ -105,13 +105,13 @@ exports.getDashboard = async (req, res) => {
         try {
           const binAgg = await Bin.aggregate([
             { $group: { _id: groupField, count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
+            { $sort: { count: -1 } }
           ]);
           if (binAgg.length) {
             binStatus = {
               labels: binAgg.map(({ _id }) => (_id || 'Unknown').toString()),
               series: binAgg.map(({ count }) => count),
-              dimension,
+              dimension
             };
           }
         } catch (err) {
@@ -124,18 +124,18 @@ exports.getDashboard = async (req, res) => {
       metrics: {
         users: { total: totalUsers, byRole: roleMap },
         bins: binTotals != null ? { total: binTotals } : null,
-        collections: collectionTotals != null ? { total: collectionTotals } : null,
+        collections: collectionTotals != null ? { total: collectionTotals } : null
       },
       charts: {
         registrations: registrationSeries,
         roleDistribution: {
           labels: roleOrder,
-          series: roleOrder.map((role) => roleMap[role] ?? 0),
+          series: roleOrder.map((role) => roleMap[role] ?? 0)
         },
         collectionStatuses,
-        binStatus,
+        binStatus
       },
-      recentUsers,
+      recentUsers
     });
   } catch (err) {
     console.error('[ADMIN][DASHBOARD]', err);
@@ -143,7 +143,7 @@ exports.getDashboard = async (req, res) => {
   }
 };
 
-exports.getUsersReport = async (req, res) => {
+exports.getUsersReport = async(req, res) => {
   try {
     const users = await User.find().select('name email role createdAt');
     res.json(users);
@@ -153,7 +153,7 @@ exports.getUsersReport = async (req, res) => {
   }
 };
 
-exports.getBinsReport = async (req, res) => {
+exports.getBinsReport = async(req, res) => {
   try {
     if (!Bin) return res.status(404).json({ message: 'Bins model not available' });
     const bins = await Bin.find().select('_id status type createdAt');
@@ -164,7 +164,7 @@ exports.getBinsReport = async (req, res) => {
   }
 };
 
-exports.getCollectionsReport = async (req, res) => {
+exports.getCollectionsReport = async(req, res) => {
   try {
     if (!Collection) return res.status(404).json({ message: 'Collections model not available' });
     const collections = await Collection.find().select('_id status createdAt');
@@ -175,12 +175,12 @@ exports.getCollectionsReport = async (req, res) => {
   }
 };
 
-exports.getOverviewReport = async (req, res) => {
+exports.getOverviewReport = async(req, res) => {
   try {
     const [totalUsers, totalBins, totalCollections] = await Promise.all([
       User.countDocuments(),
       Bin ? Bin.countDocuments() : Promise.resolve(0),
-      Collection ? Collection.countDocuments() : Promise.resolve(0),
+      Collection ? Collection.countDocuments() : Promise.resolve(0)
     ]);
     res.json({ totalUsers, totalBins, totalCollections });
   } catch (err) {
@@ -189,7 +189,7 @@ exports.getOverviewReport = async (req, res) => {
   }
 };
 
-exports.getUsers = async (req, res) => {
+exports.getUsers = async(req, res) => {
   try {
     const users = await User.find().select('name email role createdAt');
     res.json(users);
@@ -199,7 +199,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-exports.getBins = async (req, res) => {
+exports.getBins = async(req, res) => {
   try {
     if (!Bin) {
       console.warn('[ADMIN][BINS] Bin model unavailable; returning empty list.');
@@ -213,7 +213,7 @@ exports.getBins = async (req, res) => {
   }
 };
 
-exports.getCollections = async (req, res) => {
+exports.getCollections = async(req, res) => {
   try {
     if (!Collection) {
       console.warn('[ADMIN][COLLECTIONS] Collection model unavailable; returning empty list.');
@@ -238,7 +238,7 @@ function buildSampleRoute(area, schedule, truck, extraWarnings = []) {
       fillLevel: 94,
       capacity: 240,
       location: { street: '101 Prototype Ave', city: area || 'Demo District' },
-      lastUpdated: timestamp,
+      lastUpdated: timestamp
     },
     {
       sequence: 2,
@@ -248,7 +248,7 @@ function buildSampleRoute(area, schedule, truck, extraWarnings = []) {
       fillLevel: 87,
       capacity: 240,
       location: { street: '22 Simulation Blvd', city: area || 'Demo District' },
-      lastUpdated: timestamp,
+      lastUpdated: timestamp
     },
     {
       sequence: 3,
@@ -258,8 +258,8 @@ function buildSampleRoute(area, schedule, truck, extraWarnings = []) {
       fillLevel: 99,
       capacity: 360,
       location: { street: '7 Benchmark Way', city: area || 'Demo District' },
-      lastUpdated: timestamp,
-    },
+      lastUpdated: timestamp
+    }
   ];
 
   return {
@@ -268,23 +268,23 @@ function buildSampleRoute(area, schedule, truck, extraWarnings = []) {
       window: schedule || {},
       totalBinsConsidered: route.length,
       selectedBins: route.length,
-      assignedTruck: truck?.id || 'SIM-TRK-01',
+      assignedTruck: truck?.id || 'SIM-TRK-01'
     },
     estimated: {
       distanceKm: Number((route.length * 2.1).toFixed(1)),
-      durationMinutes: route.length * 10,
+      durationMinutes: route.length * 10
     },
     route,
     warnings: [
       'Live optimization unavailable; displaying sample route.',
-      ...extraWarnings.filter(Boolean),
+      ...extraWarnings.filter(Boolean)
     ],
     generatedAt: timestamp,
-    delivery: { status: 'sample' },
+    delivery: { status: 'sample' }
   };
 }
 
-exports.optimizeRoute = async (req, res) => {
+exports.optimizeRoute = async(req, res) => {
   const { area, schedule = {}, truck = {} } = req.body || {};
   try {
     if (!area || !schedule.start || !schedule.end) {
@@ -303,7 +303,7 @@ exports.optimizeRoute = async (req, res) => {
       return res.json(buildSampleRoute(area, schedule, truck, ['Bin query failed; using simulation data.']));
     }
 
-    const totalConsidered = bins.length;
+    const totalBinsConsidered = bins.length;
     const candidateBins = bins.filter((bin) => {
       const fill = typeof bin.fillLevel === 'number' ? bin.fillLevel : null;
       const status = (bin.status || '').toLowerCase();
@@ -319,13 +319,13 @@ exports.optimizeRoute = async (req, res) => {
           window: schedule,
           totalBinsConsidered,
           selectedBins: 0,
-          assignedTruck: truck.id || null,
+          assignedTruck: truck.id || null
         },
         estimated: { distanceKm: 0, durationMinutes: 0 },
         route: [],
         warnings: ['No bins in the selected area require collection.'],
         generatedAt: new Date().toISOString(),
-        delivery: { status: truck.id ? 'pending-dispatch' : 'queued' },
+        delivery: { status: truck.id ? 'pending-dispatch' : 'queued' }
       });
     }
 
@@ -347,7 +347,7 @@ exports.optimizeRoute = async (req, res) => {
       fillLevel: typeof bin.fillLevel === 'number' ? bin.fillLevel : null,
       capacity: bin.capacity || null,
       location: bin.location || bin.address || null,
-      lastUpdated: bin.updatedAt || bin.createdAt || null,
+      lastUpdated: bin.updatedAt || bin.createdAt || null
     }));
 
     const estimatedDistance = Number((route.length * 2.4).toFixed(1));
@@ -361,16 +361,16 @@ exports.optimizeRoute = async (req, res) => {
         window: schedule,
         totalBinsConsidered,
         selectedBins: route.length,
-        assignedTruck,
+        assignedTruck
       },
       estimated: {
         distanceKm: estimatedDistance,
-        durationMinutes: estimatedDuration,
+        durationMinutes: estimatedDuration
       },
       route,
       warnings: [],
       generatedAt: new Date().toISOString(),
-      delivery: { status: deliveryStatus },
+      delivery: { status: deliveryStatus }
     });
   } catch (err) {
     console.error('[ADMIN][ROUTE OPTIMIZATION]', err);

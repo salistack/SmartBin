@@ -17,7 +17,7 @@ module.exports = async function authMiddleware(req, res, next) {
     let payload;
     try {
       payload = jwt.verify(token, JWT_SECRET);
-    } catch (err) {
+    } catch {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
