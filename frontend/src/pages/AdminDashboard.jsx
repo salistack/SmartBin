@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getAuth } from '../api/client';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { clearAuth, getAuth } from '../api/client';
 import jsPDF from 'jspdf';
 
 const API_BASE = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
@@ -35,7 +36,7 @@ const navItemStyles = (active) => ({
 
 const chartPalette = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
 
-function DonutChart({ labels = [], series = [], colors = chartPalette }) {
+function DonutChart({ series = [], colors = chartPalette }) {
   const total = series.reduce((sum, value) => sum + value, 0);
   if (!total) {
     return <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>No data to display.</div>;
@@ -179,6 +180,7 @@ export default function AdminDashboard() {
   const [routeError, setRouteError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const { token } = getAuth();
@@ -427,7 +429,7 @@ export default function AdminDashboard() {
     if (section === 'collections') setCollections(safeList);
   };
 
-  const fetchManagementData = async (section) => {
+  const fetchManagementData = useCallback(async (section) => {
     setError('');
     const { token } = getAuth();
     try {
@@ -444,13 +446,18 @@ export default function AdminDashboard() {
     } catch (err) {
       setError(err.message || 'Failed to fetch data.');
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (activeSection === 'users') fetchManagementData('users');
     else if (activeSection === 'bins') fetchManagementData('bins');
     else if (activeSection === 'collections') fetchManagementData('collections');
-  }, [activeSection]);
+  }, [activeSection, fetchManagementData]);
+
+  const handleLogout = () => {
+    clearAuth();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f9fafb' }}>
@@ -476,6 +483,13 @@ export default function AdminDashboard() {
             Collections
           </div>
         </nav>
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{ marginTop: '1.5rem', width: '100%', padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid #ef4444', background: '#fff', color: '#dc2626', fontWeight: 600, cursor: 'pointer' }}
+        >
+          Log Out
+        </button>
       </aside>
       <main style={{ flex: 1, padding: '2rem' }}>
         {activeSection === 'dashboard' && (
