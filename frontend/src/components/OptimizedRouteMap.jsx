@@ -80,18 +80,18 @@ export default function OptimizedRouteMap({ origin, requests, height = 320, onSu
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).toString(),
         iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).toString(),
-        shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString(),
+        shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString()
       });
 
       const start = [origin.lat, origin.lng];
       map = L.map(containerRef.current).setView(start, 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
       // Build waypoints list: origin + ordered requests
-  const lrmWaypoints = [L.latLng(origin.lat, origin.lng), ...waypoints.map((w) => L.latLng(w.lat, w.lng)), ...(returnToOrigin ? [L.latLng(origin.lat, origin.lng)] : [])];
+      const lrmWaypoints = [L.latLng(origin.lat, origin.lng), ...waypoints.map((w) => L.latLng(w.lat, w.lng)), ...(returnToOrigin ? [L.latLng(origin.lat, origin.lng)] : [])];
 
       const control = L.Routing.control({
         waypoints: lrmWaypoints,
@@ -99,7 +99,7 @@ export default function OptimizedRouteMap({ origin, requests, height = 320, onSu
         addWaypoints: false,
         draggableWaypoints: false,
         show: false,
-        fitSelectedRoutes: true,
+        fitSelectedRoutes: true
       }).addTo(map);
 
       control.on('routesfound', (e) => {
@@ -109,7 +109,7 @@ export default function OptimizedRouteMap({ origin, requests, height = 320, onSu
           onSummaryRef.current({
             distanceMeters: summary.totalDistance,
             timeSeconds: summary.totalTime,
-            stops: waypoints.length,
+            stops: waypoints.length
           });
         }
       });
@@ -147,7 +147,7 @@ export default function OptimizedRouteMap({ origin, requests, height = 320, onSu
         addWaypoints: false,
         draggableWaypoints: false,
         show: false,
-        fitSelectedRoutes: true,
+        fitSelectedRoutes: true
       }).addTo(mapRef.current);
       control.on('routesfound', (e) => {
         const route = e.routes?.[0];
@@ -156,7 +156,7 @@ export default function OptimizedRouteMap({ origin, requests, height = 320, onSu
           onSummaryRef.current({
             distanceMeters: summary.totalDistance,
             timeSeconds: summary.totalTime,
-            stops: waypoints.length,
+            stops: waypoints.length
           });
         }
       });

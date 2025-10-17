@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { clearAuth, getAuth } from '../api/client';
+
 import jsPDF from 'jspdf';
+
+import { clearAuth, getAuth } from '../api/client';
 
 const API_BASE = (import.meta.env?.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
 const ADMIN_DASHBOARD_ENDPOINT = `${API_BASE}/api/admin/dashboard`;
@@ -13,7 +15,7 @@ const lightCardStyles = {
   background: '#ffffff',
   border: '1px solid #e5e7eb',
   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-  color: '#374151',
+  color: '#374151'
 };
 
 const sidebarStyles = {
@@ -21,7 +23,7 @@ const sidebarStyles = {
   background: '#f9fafb',
   borderRight: '1px solid #e5e7eb',
   padding: '1.5rem 1rem',
-  minHeight: '100vh',
+  minHeight: '100vh'
 };
 
 const navItemStyles = (active) => ({
@@ -31,7 +33,7 @@ const navItemStyles = (active) => ({
   background: active ? '#10b981' : 'transparent',
   color: active ? '#ffffff' : '#374151',
   fontWeight: active ? 600 : 400,
-  marginBottom: '0.5rem',
+  marginBottom: '0.5rem'
 });
 
 const chartPalette = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -173,7 +175,7 @@ export default function AdminDashboard() {
     windowStart: '',
     windowEnd: '',
     truckCapacity: '8',
-    truckId: '',
+    truckId: ''
   });
   const [routeResult, setRouteResult] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
@@ -192,10 +194,10 @@ export default function AdminDashboard() {
 
     fetch(ADMIN_DASHBOARD_ENDPOINT, {
       headers: {
-        Authorization: `Bearer ${token}`,
-      },
+        Authorization: `Bearer ${token}`
+      }
     })
-      .then(async (res) => {
+      .then(async(res) => {
         if (!res.ok) {
           const message = (await res.json().catch(() => null))?.message || 'Failed to load admin data.';
           throw new Error(message);
@@ -205,7 +207,7 @@ export default function AdminDashboard() {
       .then((data) => setPayload(data))
       .catch((err) => {
         const friendly =
-          err.message && err.message.includes("Unexpected token <")
+          err.message && err.message.includes('Unexpected token <')
             ? 'Received HTML from the server. Ensure VITE_API_BASE_URL points to your Express backend (e.g., http://localhost:5000).'
             : err.message;
         setError(friendly || 'Unexpected error.');
@@ -213,11 +215,11 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const fetchReportData = async (reportType) => {
+  const fetchReportData = async(reportType) => {
     const { token } = getAuth();
     try {
       const res = await fetch(`${REPORTS_ENDPOINT}/${reportType}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch report data.');
       const data = await res.json();
@@ -258,7 +260,7 @@ export default function AdminDashboard() {
     doc.save(`${reportType}-report.pdf`);
   };
 
-  const handleRouteSubmit = async (event) => {
+  const handleRouteSubmit = async(event) => {
     event.preventDefault();
     setRouteError('');
     setRouteResult(null);
@@ -275,16 +277,16 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           area: routeForm.area.trim(),
           schedule: { start: routeForm.windowStart, end: routeForm.windowEnd },
           truck: {
             id: routeForm.truckId.trim() || null,
-            capacity: Number(routeForm.truckCapacity) || undefined,
-          },
-        }),
+            capacity: Number(routeForm.truckCapacity) || undefined
+          }
+        })
       });
       if (!res.ok) {
         const message = (await res.json().catch(() => null))?.message || 'Failed to optimize route.';
@@ -309,38 +311,38 @@ export default function AdminDashboard() {
         title: 'Total Users',
         value: users.total ?? 0,
         accent: '#10b981',
-        subtitle: `Residents: ${roles.resident ?? 0} • Collectors: ${roles.collector ?? 0} • Admins: ${roles.admin ?? 0}`,
+        subtitle: `Residents: ${roles.resident ?? 0} • Collectors: ${roles.collector ?? 0} • Admins: ${roles.admin ?? 0}`
       },
       users && {
         title: 'Resident Accounts',
         value: roles.resident ?? 0,
         accent: '#3b82f6',
-        subtitle: 'Households connected to SmartBin',
+        subtitle: 'Households connected to SmartBin'
       },
       users && {
         title: 'Collector Network',
         value: roles.collector ?? 0,
         accent: '#10b981',
-        subtitle: 'Active waste collection agents',
+        subtitle: 'Active waste collection agents'
       },
       users && {
         title: 'Admin Operators',
         value: roles.admin ?? 0,
         accent: '#f59e0b',
-        subtitle: 'Supervisors maintaining operations',
+        subtitle: 'Supervisors maintaining operations'
       },
       bins && {
         title: 'Smart Bins',
         value: bins.total,
         accent: '#ef4444',
-        subtitle: 'Monitored units in the network',
+        subtitle: 'Monitored units in the network'
       },
       collections && {
         title: 'Collections Logged',
         value: collections.total,
         accent: '#8b5cf6',
-        subtitle: 'Historical pickup records',
-      },
+        subtitle: 'Historical pickup records'
+      }
     ].filter(Boolean);
   }, [payload]);
 
@@ -371,26 +373,26 @@ export default function AdminDashboard() {
         title: 'Total Users',
         value: users.total ?? 0,
         accent: '#10b981',
-        subtitle: `Residents: ${roles.resident ?? 0} • Collectors: ${roles.collector ?? 0} • Admins: ${roles.admin ?? 0}`,
+        subtitle: `Residents: ${roles.resident ?? 0} • Collectors: ${roles.collector ?? 0} • Admins: ${roles.admin ?? 0}`
       },
       users && {
         title: 'Resident Accounts',
         value: roles.resident ?? 0,
         accent: '#3b82f6',
-        subtitle: 'Households connected to SmartBin',
+        subtitle: 'Households connected to SmartBin'
       },
       users && {
         title: 'Collector Network',
         value: roles.collector ?? 0,
         accent: '#10b981',
-        subtitle: 'Active waste collection agents',
+        subtitle: 'Active waste collection agents'
       },
       users && {
         title: 'Admin Operators',
         value: roles.admin ?? 0,
         accent: '#f59e0b',
-        subtitle: 'Supervisors maintaining operations',
-      },
+        subtitle: 'Supervisors maintaining operations'
+      }
     ].filter(Boolean);
   }, [payload]);
 
@@ -403,8 +405,8 @@ export default function AdminDashboard() {
         title: 'Smart Bins',
         value: bins.total,
         accent: '#ef4444',
-        subtitle: 'Monitored units in the network',
-      },
+        subtitle: 'Monitored units in the network'
+      }
     ] : [];
   }, [payload]);
 
@@ -417,8 +419,8 @@ export default function AdminDashboard() {
         title: 'Collections Logged',
         value: collections.total,
         accent: '#8b5cf6',
-        subtitle: 'Historical pickup records',
-      },
+        subtitle: 'Historical pickup records'
+      }
     ] : [];
   }, [payload]);
 
@@ -429,12 +431,12 @@ export default function AdminDashboard() {
     if (section === 'collections') setCollections(safeList);
   };
 
-  const fetchManagementData = useCallback(async (section) => {
+  const fetchManagementData = useCallback(async(section) => {
     setError('');
     const { token } = getAuth();
     try {
       const res = await fetch(`${API_BASE}/api/admin/${section}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.status === 404) {
         applyManagementData(section, []);
@@ -689,7 +691,7 @@ export default function AdminDashboard() {
                   border: 'none',
                   fontWeight: 600,
                   cursor: 'pointer',
-                  opacity: routeLoading ? 0.7 : 1,
+                  opacity: routeLoading ? 0.7 : 1
                 }}
               >
                 {routeLoading ? 'Optimizing…' : 'Generate Optimized Route'}

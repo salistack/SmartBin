@@ -1,5 +1,6 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { api, clearAuth, getAuth } from '../api/client';
 import RequestsMap from '../components/RequestsMap';
 import OptimizedRouteMap from '../components/OptimizedRouteMap';
@@ -30,14 +31,12 @@ export default function CollectorOptimize() {
         id: r._id || r.id,
         lat,
         lng,
-        title: `${r.binType || 'Request'} ${r.address?.city ? '• ' + r.address.city : ''}`,
+        title: `${r.binType || 'Request'} ${r.address?.city ? `• ${r.address.city}` : ''}`
       };
     }).filter((point) => Number.isFinite(point.lat) && Number.isFinite(point.lng));
   }, [pending]);
 
-
-
-  const loadPending = useCallback(async () => {
+  const loadPending = useCallback(async() => {
     setError('');
     setLoading(true);
     try {
@@ -66,7 +65,6 @@ export default function CollectorOptimize() {
       { enableHighAccuracy: true, timeout: 8000 }
     );
   }, []);
-
 
   const handleLogout = useCallback(() => {
     clearAuth();

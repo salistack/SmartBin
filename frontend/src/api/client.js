@@ -5,9 +5,9 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...headers,
+      ...headers
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : undefined
   });
 
   let data;
@@ -28,7 +28,7 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
 export const api = {
   post: (path, body, headers) => request(path, { method: 'POST', body, headers }),
   get: (path, headers) => request(path, { method: 'GET', headers }),
-  patch: (path, body, headers) => request(path, { method: 'PATCH', body, headers }),
+  patch: (path, body, headers) => request(path, { method: 'PATCH', body, headers })
 };
 
 export function saveAuth({ user, token }) {

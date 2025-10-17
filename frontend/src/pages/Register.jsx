@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+
 import { api, saveAuth } from '../api/client';
 
 // Roles must match backend allowedRoles: ['resident','collector','admin']
 const roles = [
   { id: 'resident', label: 'Resident' },
   { id: 'collector', label: 'Collector' },
-  { id: 'admin', label: 'Admin' },
+  { id: 'admin', label: 'Admin' }
 ];
 
 export default function Register() {
@@ -44,13 +45,13 @@ export default function Register() {
       // Backend requires: name, email, password, role; address for residents
       const payload = role === 'resident'
         ? { name, email, password, role, address: {
-            street,
-            city,
-            postalCode,
-            // Only include lat/lng if user provided or GPS filled; cast to number
-            ...(lat !== '' ? { lat: parseFloat(lat) } : {}),
-            ...(lng !== '' ? { lng: parseFloat(lng) } : {}),
-          } }
+          street,
+          city,
+          postalCode,
+          // Only include lat/lng if user provided or GPS filled; cast to number
+          ...(lat !== '' ? { lat: parseFloat(lat) } : {}),
+          ...(lng !== '' ? { lng: parseFloat(lng) } : {})
+        } }
         : { name, email, password, role };
       const data = await api.post('/api/auth/register', payload);
       saveAuth(data);

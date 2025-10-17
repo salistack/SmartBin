@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+
 import { getAuth } from '../api/client';
 
 export default function Layout({ children }) {

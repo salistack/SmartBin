@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { api, clearAuth, getAuth, saveAuth } from '../api/client';
 
 // Minimal user dashboard wiring core flows available in backend:
@@ -25,7 +26,7 @@ export default function UserDashboard() {
     city: auth.user?.address?.city || '',
     postalCode: auth.user?.address?.postalCode || '',
     lat: auth.user?.address?.lat != null ? String(auth.user.address.lat) : '',
-    lng: auth.user?.address?.lng != null ? String(auth.user.address.lng) : '',
+    lng: auth.user?.address?.lng != null ? String(auth.user.address.lng) : ''
   });
   const [profileError, setProfileError] = useState('');
   const [profileSuccess, setProfileSuccess] = useState('');
@@ -44,7 +45,7 @@ export default function UserDashboard() {
       city: currentUser?.address?.city || '',
       postalCode: currentUser?.address?.postalCode || '',
       lat: currentUser?.address?.lat != null ? String(currentUser.address.lat) : '',
-      lng: currentUser?.address?.lng != null ? String(currentUser.address.lng) : '',
+      lng: currentUser?.address?.lng != null ? String(currentUser.address.lng) : ''
     });
   }, [currentUser]);
 
@@ -59,7 +60,7 @@ export default function UserDashboard() {
     return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${encodeURIComponent(lat)},${encodeURIComponent(lng)}`;
   }
 
-  const loadBins = useCallback(async () => {
+  const loadBins = useCallback(async() => {
     setError('');
     try {
       const data = await api.get('/api/bins', authHeader);
@@ -80,7 +81,7 @@ export default function UserDashboard() {
     setProfileForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleProfileSubmit = async (event) => {
+  const handleProfileSubmit = async(event) => {
     event.preventDefault();
     setProfileError('');
     setProfileSuccess('');
@@ -96,8 +97,8 @@ export default function UserDashboard() {
       address: {
         street: profileForm.street.trim(),
         city: profileForm.city.trim(),
-        postalCode: profileForm.postalCode.trim(),
-      },
+        postalCode: profileForm.postalCode.trim()
+      }
     };
 
     const latVal = profileForm.lat.trim();
@@ -152,7 +153,7 @@ export default function UserDashboard() {
         setProfileForm((prev) => ({
           ...prev,
           lat: latitude.toFixed(6),
-          lng: longitude.toFixed(6),
+          lng: longitude.toFixed(6)
         }));
         setProfileSuccess('Coordinates captured from your device. Save to apply.');
       },
@@ -163,7 +164,7 @@ export default function UserDashboard() {
     );
   };
 
-  const loadMyRequests = useCallback(async () => {
+  const loadMyRequests = useCallback(async() => {
     setReqError('');
     setReqLoading(true);
     try {
@@ -225,10 +226,10 @@ export default function UserDashboard() {
       <aside className="w-56 border-r bg-gray-50 p-4">
         <div className="text-emerald-700 font-bold mb-3">Resident</div>
         <nav className="space-y-1">
-          <button onClick={() => setActive('address')} className={`w-full text-left px-3 py-2 rounded-md ${active==='address' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>My Address</button>
-          <button onClick={() => setActive('create')} className={`w-full text-left px-3 py-2 rounded-md ${active==='create' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>Create Bin</button>
-          <button onClick={() => setActive('bins')} className={`w-full text-left px-3 py-2 rounded-md ${active==='bins' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>My Bins</button>
-          <button onClick={() => { setActive('requests'); loadMyRequests(); }} className={`w-full text-left px-3 py-2 rounded-md ${active==='requests' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>Requests</button>
+          <button onClick={() => setActive('address')} className={`w-full text-left px-3 py-2 rounded-md ${active === 'address' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>My Address</button>
+          <button onClick={() => setActive('create')} className={`w-full text-left px-3 py-2 rounded-md ${active === 'create' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>Create Bin</button>
+          <button onClick={() => setActive('bins')} className={`w-full text-left px-3 py-2 rounded-md ${active === 'bins' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>My Bins</button>
+          <button onClick={() => { setActive('requests'); loadMyRequests(); }} className={`w-full text-left px-3 py-2 rounded-md ${active === 'requests' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}>Requests</button>
         </nav>
       </aside>
 

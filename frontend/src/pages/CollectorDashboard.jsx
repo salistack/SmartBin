@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { api, clearAuth, getAuth } from '../api/client';
 import RouteMap from '../components/RouteMap';
 
@@ -45,7 +46,7 @@ export default function CollectorDashboard() {
     const onSummary = ({ distanceMeters, timeSeconds }) => {
       setSummaryById((prev) => ({
         ...prev,
-        [id]: { distanceMeters, timeSeconds },
+        [id]: { distanceMeters, timeSeconds }
       }));
     };
     return (
@@ -65,7 +66,7 @@ export default function CollectorDashboard() {
     );
   }
 
-  const loadPending = useCallback(async () => {
+  const loadPending = useCallback(async() => {
     setError('');
     setLoading(true);
     try {
@@ -78,7 +79,7 @@ export default function CollectorDashboard() {
     }
   }, [authHeader]);
 
-  const loadCollected = useCallback(async () => {
+  const loadCollected = useCallback(async() => {
     setHistoryError('');
     setHistoryLoading(true);
     try {
@@ -144,7 +145,7 @@ export default function CollectorDashboard() {
               setSummaryById({});
               loadPending();
             }}
-            className={`w-full text-left px-3 py-2 rounded-md ${active==='pending' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}
+            className={`w-full text-left px-3 py-2 rounded-md ${active === 'pending' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}
           >
             Pending Requests
           </button>
@@ -161,7 +162,7 @@ export default function CollectorDashboard() {
               setSummaryById({});
               loadCollected();
             }}
-            className={`w-full text-left px-3 py-2 rounded-md ${active==='collected' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}
+            className={`w-full text-left px-3 py-2 rounded-md ${active === 'collected' ? 'bg-emerald-600 text-white' : 'hover:bg-gray-100'}`}
           >
             Collected History
           </button>

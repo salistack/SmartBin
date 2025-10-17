@@ -31,14 +31,14 @@ export default function RequestsMap({ origin, points, height = 360, focusId }) {
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).toString(),
         iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).toString(),
-        shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString(),
+        shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString()
       });
 
       if (!containerRef.current) return;
       map = L.map(containerRef.current).setView([origin?.lat || 0, origin?.lng || 0], origin ? 13 : 2);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors',
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
       const layer = L.layerGroup().addTo(map);
