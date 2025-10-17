@@ -1,12 +1,30 @@
 // Utility functions for input validation
 const validateEmail = (email) => {
-  const re = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-  return re.test(email);
+  if (typeof email !== 'string') return false;
+  if (email.length === 0 || email.length > 320) return false;
+  if (/\s/.test(email)) return false;
+  if (email.includes('..')) return false;
+
+  const parts = email.split('@');
+  if (parts.length !== 2) return false;
+
+  const [localPart, domainPart] = parts;
+  if (localPart.length === 0 || localPart.length > 128) return false;
+  if (!/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]+$/.test(localPart)) return false;
+
+  if (domainPart.length === 0 || domainPart.length > 190) return false;
+  if (!/^[A-Za-z0-9.-]+$/.test(domainPart)) return false;
+  if (domainPart.startsWith('-') || domainPart.endsWith('-')) return false;
+  if (!domainPart.includes('.')) return false;
+  if (domainPart.split('.').some((label) => label.length === 0)) return false;
+
+  return true;
 };
 
 const validatePassword = (password) => {
-  // At least 6 characters, contains letter and number
-  return password && password.length >= 6 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
+  if (typeof password !== 'string') return false;
+  if (password.length < 6) return false;
+  return /[A-Za-z]/.test(password) && /[0-9]/.test(password);
 };
 
 const validateCoordinates = (lat, lng) => {
