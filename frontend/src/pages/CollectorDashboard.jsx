@@ -2,8 +2,6 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, clearAuth, getAuth } from '../api/client';
 import RouteMap from '../components/RouteMap';
-import RequestsMap from '../components/RequestsMap';
-import OptimizedRouteMap from '../components/OptimizedRouteMap';
 
 // Collector dashboard wires to backend collector flows:
 // - List Pending Requests: GET /api/collections/pending
@@ -23,25 +21,6 @@ export default function CollectorDashboard() {
   // For simplicity, default origin is Colombo; user can override with GPS
   const [origin, setOrigin] = useState({ lat: 6.9271, lng: 79.8612 });
   const [summaryById, setSummaryById] = useState({});
-  const [focusId, setFocusId] = useState(null);
-  const [showAllOptimized, setShowAllOptimized] = useState(false);
-  const [allSummary, setAllSummary] = useState(null);
-  const [loopBack, setLoopBack] = useState(false);
-  const [orderedStops, setOrderedStops] = useState([]);
-  const mapPoints = useMemo(() => {
-    return pending.map((r) => {
-      let lat = r?.bin?.owner?.address?.lat ?? r?.address?.lat;
-      let lng = r?.bin?.owner?.address?.lng ?? r?.address?.lng;
-      if (typeof lat === 'string') lat = parseFloat(lat);
-      if (typeof lng === 'string') lng = parseFloat(lng);
-      return {
-        id: r._id || r.id,
-        lat,
-        lng,
-        title: `${r.binType || 'Request'} ${r.address?.city ? '• ' + r.address.city : ''}`,
-      };
-    }).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
-  }, [pending]);
 
   function getDestinationFromRequest(r) {
     let lat = r?.bin?.owner?.address?.lat ?? r?.address?.lat;
@@ -162,10 +141,6 @@ export default function CollectorDashboard() {
             onClick={() => {
               if (active !== 'pending') setActive('pending');
               setExpandedRouteId(null);
-              setFocusId(null);
-              setShowAllOptimized(false);
-              setAllSummary(null);
-              setOrderedStops([]);
               setSummaryById({});
               loadPending();
             }}
@@ -174,13 +149,15 @@ export default function CollectorDashboard() {
             Pending Requests
           </button>
           <button
+            onClick={() => navigate('/dashboard/collector/optimize')}
+            className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100"
+          >
+            Open Route Optimizer
+          </button>
+          <button
             onClick={() => {
               if (active !== 'collected') setActive('collected');
               setExpandedRouteId(null);
-              setFocusId(null);
-              setShowAllOptimized(false);
-              setAllSummary(null);
-              setOrderedStops([]);
               setSummaryById({});
               loadCollected();
             }}
@@ -224,7 +201,6 @@ export default function CollectorDashboard() {
                         (pos) => {
                           const { latitude, longitude } = pos.coords;
                           setOrigin({ lat: latitude, lng: longitude });
-                          setFocusId('collector');
                         },
                         () => alert('Unable to retrieve your location')
                       );
@@ -233,59 +209,14 @@ export default function CollectorDashboard() {
                   >
                     Use My Location
                   </button>
-                  {!showAllOptimized && (
-                    <button
-                      onClick={() => setFocusId('collector')}
-                      className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50"
-                    >
-                      Center on Me
-                    </button>
-                  )}
                   <button onClick={loadPending} className="text-sm border px-3 py-1 rounded-md hover:bg-gray-50">Refresh</button>
+                  <button
+                    onClick={() => navigate('/dashboard/collector/optimize')}
+                    className="text-sm border border-emerald-500 text-emerald-600 px-3 py-1 rounded-md hover:bg-emerald-50"
+                  >
+                    Open Route Optimizer
+                  </button>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={showAllOptimized} onChange={(e) => setShowAllOptimized(e.target.checked)} />
-                    Show shortest route through all
-                  </label>
-                  {showAllOptimized && (
-                    <label className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={loopBack} onChange={(e) => setLoopBack(e.target.checked)} />
-                      Return to origin
-                    </label>
-                  )}
-                  {showAllOptimized && allSummary && (
-                    <div className="text-xs text-gray-700">
-                      Distance: {Math.round(allSummary.distanceMeters / 100) / 10} km
-                      <span className="ml-3">ETA: {Math.round(allSummary.timeSeconds / 60)} min</span>
-                      <span className="ml-3">Stops: {allSummary.stops}</span>
-                    </div>
-                  )}
-                  {showAllOptimized && orderedStops.length > 0 && (
-                    <a
-                      className="text-xs text-emerald-700 underline ml-auto"
-                      href={buildGoogleMapsUrl(origin, orderedStops, loopBack)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open in Google Maps
-                    </a>
-                  )}
-                </div>
-                {showAllOptimized ? (
-                  <OptimizedRouteMap
-                    origin={origin}
-                    requests={mapPoints}
-                    onSummary={(s) => setAllSummary(s)}
-                    returnToOrigin={loopBack}
-                    onOrder={(stops) => setOrderedStops(stops)}
-                  />
-                ) : (
-                  <RequestsMap origin={origin} points={mapPoints} focusId={focusId} />
-                )}
               </div>
 
               {loading ? (
@@ -319,12 +250,6 @@ export default function CollectorDashboard() {
                               </td>
                               <td className="px-4 py-3">
                                 <div className="flex flex-wrap gap-2">
-                                  <button
-                                    onClick={() => setFocusId(id)}
-                                    className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
-                                  >
-                                    Center on Map
-                                  </button>
                                   <button
                                     onClick={() => setExpandedRouteId(expandedRouteId === id ? null : id)}
                                     className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
@@ -397,12 +322,6 @@ export default function CollectorDashboard() {
                               <td className="px-4 py-3">
                                 <div className="flex flex-wrap gap-2">
                                   <button
-                                    onClick={() => setFocusId(id)}
-                                    className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
-                                  >
-                                    Center on Map
-                                  </button>
-                                  <button
                                     onClick={() => setExpandedRouteId(expandedRouteId === id ? null : id)}
                                     className="text-xs border px-3 py-1 rounded-md hover:bg-gray-50"
                                   >
@@ -431,19 +350,4 @@ export default function CollectorDashboard() {
       </div>
     </div>
   );
-}
-
-// Build a Google Maps directions URL with multiple waypoints
-function buildGoogleMapsUrl(origin, stops, loopBack) {
-  const enc = encodeURIComponent;
-  // Prefer explicit GPS coordinates as origin; fallback to 'Current Location' if missing
-  const hasOrigin = origin && Number.isFinite(origin.lat) && Number.isFinite(origin.lng);
-  const o = hasOrigin ? `${origin.lat},${origin.lng}` : 'Current Location';
-  const destination = loopBack && stops.length > 0 ? o : `${stops[stops.length - 1].lat},${stops[stops.length - 1].lng}`;
-  const waypoints = stops.slice(0, loopBack ? stops.length : Math.max(0, stops.length - 1))
-    .map((s) => `${s.lat},${s.lng}`).join('|');
-  const base = 'https://www.google.com/maps/dir/?api=1';
-  const params = [`origin=${enc(o)}`, `destination=${enc(destination)}`];
-  if (waypoints) params.push(`waypoints=${enc(waypoints)}`);
-  return `${base}&${params.join('&')}`;
 }

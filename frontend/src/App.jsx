@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 import UserDashboard from './pages/UserDashboard';
 import CollectorDashboard from './pages/CollectorDashboard';
+import CollectorOptimize from './pages/CollectorOptimize';
 import { getAuth } from './api/client';
 
 function RoleRoute({ role, children }) {
@@ -39,7 +40,8 @@ export default function App() {
     <Route path="/dashboard" element={<PrivateRoute><DashboardRedirect /></PrivateRoute>} />
     <Route path="/dashboard/admin" element={<PrivateRoute><RoleRoute role="admin"><AdminDashboard /></RoleRoute></PrivateRoute>} />
     <Route path="/dashboard/user" element={<PrivateRoute><RoleRoute role="resident"><UserDashboard /></RoleRoute></PrivateRoute>} />
-    <Route path="/dashboard/collector" element={<PrivateRoute><RoleRoute role="collector"><CollectorDashboard /></RoleRoute></PrivateRoute>} />
+  <Route path="/dashboard/collector" element={<PrivateRoute><RoleRoute role="collector"><CollectorDashboard /></RoleRoute></PrivateRoute>} />
+  <Route path="/dashboard/collector/optimize" element={<PrivateRoute><RoleRoute role="collector"><CollectorOptimize /></RoleRoute></PrivateRoute>} />
         <Route path="*" element={<div style={{ padding: '2rem' }}>Not Found</div>} />
       </Routes>
     </Layout>
