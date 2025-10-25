@@ -121,15 +121,23 @@ const validateNumber = (fieldName, options = {}) => {
 };
 
 /**
- * Middleware to validate MongoDB ObjectId format
- * @param {string} paramName - Name of the route parameter
+ * Middleware to validate MongoDB ObjectId format.
+ * It will look for the id in route params first, then in the request body.
+ * @param {string} paramName - Name of the route param or body field to validate
  */
 const validateObjectId = (paramName) => {
   return (req, res, next) => {
-    const id = req.params[paramName];
+    // Prefer route params, fall back to body field
+    const id = req.params && req.params[paramName] ? req.params[paramName] : (req.body && req.body[paramName] ? req.body[paramName] : undefined);
     const objectIdRegex = /^[0-9a-fA-F]{24}$/;
 
-    if (!objectIdRegex.test(id)) {
+    if (!id) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json(
+        createErrorResponse(`${paramName} is required`)
+      );
+    }
+
+    if (!objectIdRegex.test(String(id))) {
       return res.status(HTTP_STATUS.BAD_REQUEST).json(
         createErrorResponse(`Invalid ${paramName} format`)
       );
