@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "vscjava.vscode-java-pack",
+    "vscjava.vscode-spring-boot",
+    "vscjava.vscode-maven",
+    "vscjava.vscode-java-debug",
+    "redhat.vscode-yaml",
+    "gabrielbb.vscode-lombok"
+  ]
+}
